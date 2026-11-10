@@ -1,0 +1,6 @@
+FROM python:3.13-slim-bookworm@sha256:281d39ff02e3b389401586134ff9e6572954687822a58055ec07a60ded4e0b7f
+COPY requirements.lock /opt/requirements.lock
+RUN mkdir -p /opt/wheelhouse /work/home /work/distributions && python -m pip download --no-cache-dir --only-binary=:all: --require-hashes --index-url https://pypi.org/simple -r /opt/requirements.lock --dest /opt/wheelhouse && sha256sum /opt/wheelhouse/* > /opt/wheelhouse.sha256 && chown -R 1000:1000 /work
+ENV HOME=/work/home OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONHASHSEED=0 PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /work
+USER 1000:1000

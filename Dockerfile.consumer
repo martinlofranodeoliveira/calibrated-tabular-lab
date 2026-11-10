@@ -1,0 +1,10 @@
+FROM python:3.13-slim-bookworm@sha256:281d39ff02e3b389401586134ff9e6572954687822a58055ec07a60ded4e0b7f
+COPY wheelhouse /opt/wheelhouse
+COPY requirements-runtime.lock /opt/requirements-runtime.lock
+COPY dist/*.whl /opt/distributions/
+COPY --chown=1000:1000 consumer.py /opt/consumer.py
+RUN mkdir -p /work/home && chown -R 1000:1000 /work
+ENV HOME=/work/home OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONHASHSEED=0 PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /work
+USER 1000:1000
+CMD ["sh", "-ec", "! command -v gcc; ! command -v gfortran; python -m venv /work/venv; /work/venv/bin/python -m pip install --no-index --find-links /opt/wheelhouse --require-hashes -r /opt/requirements-runtime.lock; /work/venv/bin/python -m pip install --no-index --no-deps /opt/distributions/*.whl; /work/venv/bin/python -m pip check; /work/venv/bin/python /opt/consumer.py"]
